@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	influxHost string = os.Getenv("INFLUXDB_PORT_8808_TCP_ADDR")
-	influxPort string = os.Getenv("INFLUXDB_PORT_8808_TCP_PORT")
+	influxHost string = os.Getenv("INFLUXDB_PORT_8088_TCP_ADDR")
+	influxPort string = os.Getenv("INFLUXDB_PORT_8088_TCP_PORT")
 	s3Bucket   string = os.Getenv("AWS_BUCKET")
 	freqStr    string = os.Getenv("BACKUP_FREQUENCY")
 	letters           = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -38,21 +38,21 @@ func main() {
 				log.Println("Starting backup...")
 				backup, err := captureBackup()
 				if err != nil {
-					log.Fatal(err)
+					log.Println(err)
 				}
 
 				log.Println("Uploading backup to S3...")
 				err = s3Upload("influx-"+randName(10), s3Bucket, backup)
 
 				if err != nil {
-					log.Fatal(err)
+					log.Println(err)
 				}
 
 				log.Println("Cleaning up...")
 				info, _ := backup.Stat()
 				err = os.Remove(info.Name())
 				if err != nil {
-					log.Fatal(err)
+					log.Println(err)
 				}
 				log.Println("Backup Complete")
 			case <-stop:
@@ -98,7 +98,7 @@ func randName(n int) string {
 // captureBackup invokes the influxd command in backup mode, returning a handle
 // to the backup file
 func captureBackup() (backup *os.File, err error) {
-	influxBackup := exec.Command("influxd", "backup", "-host", influxHost+":"+influxPort, "influx-snapshot")
+	influxBackup := exec.Command("/opt/influxdb/influxd", "backup", "-host", influxHost+":"+influxPort, "influx-snapshot")
 
 	out, err := influxBackup.Output()
 	if err != nil {
